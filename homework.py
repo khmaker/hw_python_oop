@@ -11,15 +11,15 @@ class Calculator:
 
     def get_today_stats(self):
         today = dt.date.today()
-        today_stats = sum(record.amount if record.date == today 
-                          else 0 for record in self.records)
+        today_stats = sum(record.amount for record in self.records
+                          if record.date == today)
         return today_stats
 
     def get_week_stats(self):
         today = dt.date.today()
         week_ago = today - dt.timedelta(7)
-        week_stats = sum(record.amount if week_ago <= record.date <= today
-                         else 0 for record in self.records)
+        week_stats = sum(record.amount for record in self.records
+                         if week_ago <= record.date <= today)
         return week_stats
 
     def remained(self):
@@ -30,7 +30,7 @@ class Record:
     def __init__(self, amount, comment, date=None):
         self.amount = amount
         self.comment = comment
-        if date:
+        if date is not None:
             self.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
         else:
             self.date = dt.date.today()
@@ -51,18 +51,17 @@ class CashCalculator(Calculator):
     RUB_RATE = 1.0
 
     def get_today_cash_remained(self, currency):
+        cash_remained = self.remained()
+        if cash_remained == 0:
+            return 'Денег нет, держись'
         currencies = {
             'eur': ('Euro', self.EURO_RATE),
             'usd': ('USD', self.USD_RATE),
             'rub': ('руб', self.RUB_RATE),
         }
-        sign = currencies.get(currency)[0]
-        rate = currencies.get(currency)[1]
-        cash_remained = round(self.remained() / rate, 2)
-        if cash_remained == 0:
-            return 'Денег нет, держись'
+        sign, rate = currencies.get(currency)
+        cash_remained = round(cash_remained / rate, 2)
         if cash_remained > 0:
             return f'На сегодня осталось {cash_remained} {sign}'
-        if cash_remained < 0:
-            cash_remained = abs(cash_remained)
-            return f'Денег нет, держись: твой долг - {cash_remained} {sign}'
+        cash_remained = abs(cash_remained)
+        return f'Денег нет, держись: твой долг - {cash_remained} {sign}'
