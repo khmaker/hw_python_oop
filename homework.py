@@ -5,66 +5,64 @@ class Calculator:
     def __init__(self, limit):
         self.records = []
         self.limit = limit
-        self.today = dt.date.today()
 
     def add_record(self, record):
         self.records.append(record)
 
     def get_today_stats(self):
-        today_stats = 0
-        for i in self.records:
-            if i.date == self.today:
-                today_stats += i.amount
+        today = dt.date.today()
+        today_stats = sum(record.amount if record.date == today 
+                          else 0 for record in self.records)
         return today_stats
 
     def get_week_stats(self):
-        week_stats = 0
-        for i in self.records:
-            if 0 <= (self.today - i.date).days <= 7:
-                week_stats += i.amount
+        today = dt.date.today()
+        week_ago = today - dt.timedelta(7)
+        week_stats = sum(record.amount if week_ago <= record.date <= today 
+                          else 0 for record in self.records)
         return week_stats
+
+    def remained(self):
+        return self.limit - self.get_today_stats()
 
 
 class Record:
-    today = dt.date.today().strftime('%d.%m.%Y')
-
-    def __init__(self, amount, comment, date=today):
+    def __init__(self, amount, comment, date=None):
         self.amount = amount
         self.comment = comment
-        self.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
-
-    def __repr__(self):
-        return f'{self.amount}\n{self.comment}\n{self.date}'
+        if date:
+            self.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
+        else:
+            self.date = dt.date.today()
 
 
 class CaloriesCalculator(Calculator):
     def get_calories_remained(self):
-        colories_remained = self.limit - self.get_today_stats()
+        colories_remained = self.remained()
         if colories_remained <= 0:
-            return f'Хватит есть!'
-        return (f'Сегодня можно съесть что-нибудь ещё, но с общей калорийностью не более {colories_remained} кКал')
+            return 'Хватит есть!'
+        return ('Сегодня можно съесть что-нибудь ещё, но с общей '
+                f'калорийностью не более {colories_remained} кКал')
 
 
 class CashCalculator(Calculator):
     USD_RATE = 60.0
     EURO_RATE = 70.0
+    RUB_RATE = 1.0
 
     def get_today_cash_remained(self, currency):
-        cash_remained = self.limit - self.get_today_stats()
-        sign = 'руб'
-        if currency == 'usd':
-            cash_remained = round(cash_remained / self.USD_RATE, 2)
-            sign = 'USD'
-        elif currency == 'eur':
-            cash_remained = round(cash_remained / self.EURO_RATE, 2)
-            sign = 'Euro'
+        currencies = {
+            'eur': ('Euro', self.EURO_RATE),
+            'usd': ('USD', self.USD_RATE),
+            'rub': ('руб', self.RUB_RATE),
+        }
+        sign = currencies.get(currency)[0]
+        rate = currencies.get(currency)[1]
+        cash_remained = round(self.remained() / rate, 2)
         if cash_remained == 0:
-            return f'Денег нет, держись'
+            return 'Денег нет, держись'
         if cash_remained > 0:
             return f'На сегодня осталось {cash_remained} {sign}'
         if cash_remained < 0:
-            return f'Денег нет, держись: твой долг - {abs(cash_remained)} {sign}'
-
-
-if __name__ == '__main__':
-    pass
+            cash_remained = abs(cash_remained)
+            return f'Денег нет, держись: твой долг - {cash_remained} {sign}'
