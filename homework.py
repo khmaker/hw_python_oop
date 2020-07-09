@@ -18,8 +18,8 @@ class Calculator:
     def get_week_stats(self):
         today = dt.date.today()
         week_ago = today - dt.timedelta(7)
-        week_stats = sum(record.amount if week_ago <= record.date <= today 
-                          else 0 for record in self.records)
+        week_stats = sum(record.amount if week_ago <= record.date <= today
+                         else 0 for record in self.records)
         return week_stats
 
     def remained(self):
@@ -38,11 +38,11 @@ class Record:
 
 class CaloriesCalculator(Calculator):
     def get_calories_remained(self):
-        colories_remained = self.remained()
-        if colories_remained <= 0:
+        calories_remained = self.remained()
+        if calories_remained <= 0:
             return 'Хватит есть!'
         return ('Сегодня можно съесть что-нибудь ещё, но с общей '
-                f'калорийностью не более {colories_remained} кКал')
+                f'калорийностью не более {calories_remained} кКал')
 
 
 class CashCalculator(Calculator):
