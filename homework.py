@@ -59,6 +59,8 @@ class CashCalculator(Calculator):
             'usd': ('USD', self.USD_RATE),
             'rub': ('руб', self.RUB_RATE),
         }
+        if currency not in currencies:
+            return 'No such currency.'
         sign, rate = currencies.get(currency)
         cash_remained = round(cash_remained / rate, 2)
         if cash_remained > 0:
